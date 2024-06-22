@@ -1,0 +1,108 @@
+import discord
+import os
+from discord.ext  import commands
+import random
+
+description='Este es un programa donde vinculamos a discord con studio code para lanzar imagenes:'
+intents=discord. Intents.default()
+intents.members=True
+intents.message_content=True
+
+bot=commands.Bot(command_prefix="$", description=description, intents=intents)
+img_name_con = os.listdir('imagescon')
+
+@bot.event
+async def on_ready():
+    print(f'logeado como {bot.user} (ID: {bot.user.id})')
+
+@bot.command()
+async def imagencon(ctx):
+    if ctx.message.author == bot.user:
+        return
+
+    img_to_send_con = random.choice(img_name_con)
+    with open(f'Imagescon/{img_to_send_con}', 'rb') as f:
+        picture = discord.File(f)
+        await ctx.send(file=picture)
+
+import discord
+from discord.ext import commands
+import asyncio
+
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+questions = [
+    {
+        "question": "¿Qué es la contaminación del aire?",
+        "options": ["A) La presencia de sustancias nocivas en el aire", "B) Ruido excesivo", "C) Lluvia ácida"],
+        "answer": "A"
+    },
+    {
+        "question": "¿Cuál de estos es un gas contaminante?",
+        "options": ["A) Oxígeno", "B) Nitrógeno", "C) Dióxido de carbono"],
+        "answer": "C"
+    },
+    {
+        "question": "¿Qué se debe hacer con el plástico para reducir la contaminación?",
+        "options": ["A) Tirarlo en cualquier lugar", "B) Reciclarlo", "C) Quemarlo"],
+        "answer": "B"
+    }
+]
+
+recycling_tips = [
+    "Lava los envases antes de reciclarlos para eliminar restos de comida.",
+    "Separa los residuos según el tipo de material: plástico, vidrio, papel, etc.",
+    "No mezcles materiales reciclables con basura común.",
+    "Reutiliza los envases y bolsas siempre que sea posible.",
+    "Infórmate sobre los puntos de reciclaje más cercanos a tu hogar.",
+    "Usa contenedores de reciclaje adecuados y correctamente etiquetados."
+]
+
+
+scores = {}
+
+@bot.event
+async def on_ready():
+    print(f'Bot conectado como {bot.user}')
+
+@bot.command(name='jugar')
+async def jugar(ctx):
+    user_id = ctx.author.id
+    if user_id not in scores:
+        scores[user_id] = 0
+    
+    question = questions.pop(0)
+    options = "\n".join(question["options"])
+    await ctx.send(f"{question['question']}\n{options}")
+
+    def check(msg):
+        return msg.author == ctx.author and msg.content.upper() in ['A', 'B', 'C']
+
+    try:
+        msg = await bot.wait_for('message', timeout=30.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send(f"¡Se acabó el tiempo! La respuesta correcta era {question['answer']}")
+    else:
+        if msg.content.upper() == question["answer"]:
+            scores[user_id] += 1
+            await ctx.send(f"¡Correcto! Tu puntuación es ahora {scores[user_id]}")
+        else:
+            await ctx.send(f"Incorrecto. La respuesta correcta era {question['answer']}. Tu puntuación es {scores[user_id]}")
+
+    if questions:
+        await ctx.send("¿Quieres otra pregunta? Escribe `!jugar` para continuar.")
+    else:
+        await ctx.send("¡Has respondido todas las preguntas! Gracias por jugar.")
+
+@bot.command(name='puntuacion')
+async def puntuacion(ctx):
+    user_id = ctx.author.id
+    score = scores.get(user_id, 0)
+    await ctx.send(f"Tu puntuación es {score}")
+
+@bot.command(name='consejoreciclar')
+async def consejoreciclar(ctx):
+    tip = random.choice(recycling_tips)
+    await ctx.send(f"Consejo sobre reciclaje: {tip}")
+
+bot.run('MTI1MTYxNjMxODg3NzIwNDU3MQ.GTXEBt.xMNwQjjm7cEG3ddmAl31QC2ZOPSxUR1Vg77Bd0')
